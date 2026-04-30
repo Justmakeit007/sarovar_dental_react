@@ -1,0 +1,1174 @@
+import { useState, useEffect, useRef } from "react";
+
+/* ─── CSS ────────────────────────────────────────────────────── */
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --crimson:#C8102E; --crimson-dark:#9B0B22; --crimson-deep:#6B0718;
+  --crimson-light:#E84060; --crimson-pale:#FBEAED;
+  --crimson-muted:rgba(200,16,46,0.08);
+  --white:#FFFFFF; --off-white:#FAFAFA; --light-gray:#F2F2F4;
+  --mid-gray:#E8E8EC; --text-dark:#111118; --text-mid:#44444E;
+  --text-light:#888896; --gold:#C9A84C;
+}
+
+html { scroll-behavior:smooth; }
+body { background:var(--white); color:var(--text-dark); font-family:'Outfit',sans-serif; overflow-x:hidden; }
+
+/* ── Custom cursor (desktop only) ── */
+@media(pointer:fine){
+  body { cursor:none; }
+  .dentall-cursor-dot, .dentall-cursor-ring { pointer-events:none; position:fixed; border-radius:50%; z-index:9999; transform:translate(-50%,-50%); transition:width .2s,height .2s; }
+  .dentall-cursor-dot { width:10px; height:10px; background:var(--crimson); }
+  .dentall-cursor-ring { width:32px; height:32px; border:1.5px solid rgba(200,16,46,.35); z-index:9998; transition:left .1s ease,top .1s ease; }
+  button,a,input { cursor:none !important; }
+}
+@media(pointer:coarse){ .dentall-cursor-dot,.dentall-cursor-ring { display:none; } }
+
+/* ── Nav ── */
+.dn-nav {
+  position:fixed; top:0; left:0; width:100%; z-index:100;
+  padding:1.1rem 3rem; display:flex; justify-content:space-between; align-items:center;
+  background:rgba(255,255,255,0.93); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--mid-gray);
+}
+.dn-logo { font-family:'Playfair Display',serif; font-size:1.45rem; font-weight:700; letter-spacing:.08em; color:var(--crimson); }
+.dn-nav-links { display:flex; gap:2rem; align-items:center; }
+.dn-nav-links a { color:var(--text-mid); text-decoration:none; font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; font-weight:500; transition:color .3s; }
+.dn-nav-links a:hover { color:var(--crimson); }
+.dn-nav-cta {
+  background:var(--crimson); color:#fff; border:none; padding:.6rem 1.5rem;
+  font-family:'Outfit',sans-serif; font-size:.78rem; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; border-radius:2px; transition:background .3s,transform .2s;
+}
+.dn-nav-cta:hover { background:var(--crimson-dark); transform:translateY(-1px); }
+
+/* hamburger */
+.dn-hamburger { display:none; flex-direction:column; gap:5px; background:none; border:none; padding:4px; }
+.dn-hamburger span { display:block; width:24px; height:2px; background:var(--text-dark); border-radius:2px; transition:all .3s; }
+.dn-hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.dn-hamburger.open span:nth-child(2) { opacity:0; }
+.dn-hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+/* mobile drawer */
+.dn-drawer {
+  position:fixed; top:0; left:0; width:100%; height:100%; z-index:99;
+  background:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  gap:2.5rem; transform:translateX(100%); transition:transform .4s cubic-bezier(.77,0,.18,1);
+}
+.dn-drawer.open { transform:translateX(0); }
+.dn-drawer a { font-size:1.4rem; font-family:'Playfair Display',serif; color:var(--text-dark); text-decoration:none; }
+.dn-drawer button.dn-nav-cta { padding:1rem 3rem; font-size:.88rem; }
+
+@media(max-width:768px){
+  .dn-nav { padding:1rem 1.4rem; }
+  .dn-nav-links { display:none; }
+  .dn-hamburger { display:flex; }
+}
+
+/* ── Hero ── */
+.dn-hero {
+  min-height:100vh; display:grid; grid-template-columns:1fr 1fr;
+  align-items:center; padding:8rem 5rem 4rem; position:relative; overflow:hidden;
+  background:var(--white);
+}
+.dn-hero-bg { position:absolute; right:-5%; top:0; width:55%; height:100%; z-index:0;
+  background:linear-gradient(135deg,var(--crimson-pale) 0%,#fff 70%);
+  clip-path:polygon(15% 0%,100% 0%,100% 100%,0% 100%);
+}
+.dn-hero-content { position:relative; z-index:2; padding-right:3rem; }
+.dn-hero-tag {
+  display:inline-flex; align-items:center; gap:.6rem; font-size:.72rem;
+  letter-spacing:.3em; text-transform:uppercase; color:var(--crimson); font-weight:600; margin-bottom:1.5rem;
+}
+.dn-hero-tag::before { content:''; display:block; width:32px; height:2px; background:var(--crimson); }
+.dn-h1 { font-family:'Playfair Display',serif; font-size:clamp(2.8rem,5.5vw,5.5rem); font-weight:700; line-height:1.0; letter-spacing:-.02em; color:var(--text-dark); margin-bottom:1.5rem; }
+.dn-h1 em { color:var(--crimson); font-style:italic; }
+.dn-hero-sub { font-size:1rem; color:var(--text-mid); line-height:1.75; max-width:440px; margin-bottom:2.5rem; font-weight:300; }
+.dn-hero-ctas { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+.dn-btn-primary { background:var(--crimson); color:#fff; border:none; padding:1rem 2.2rem; font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; border-radius:2px; transition:all .3s; }
+.dn-btn-primary:hover { background:var(--crimson-dark); transform:translateY(-2px); box-shadow:0 12px 30px rgba(200,16,46,.25); }
+.dn-btn-ghost { background:transparent; border:1.5px solid var(--crimson); color:var(--crimson); padding:1rem 2.2rem; font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:500; letter-spacing:.08em; text-transform:uppercase; border-radius:2px; transition:all .3s; }
+.dn-btn-ghost:hover { background:var(--crimson-pale); }
+.dn-hero-image-wrap { position:relative; z-index:2; display:flex; justify-content:center; align-items:center; }
+.dn-hero-img { width:300px; filter:drop-shadow(0 24px 60px rgba(200,16,46,.12)); animation:float-hero 4s ease-in-out infinite; }
+@keyframes float-hero { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+.dn-hero-badge { position:absolute; bottom:2rem; left:1rem; background:#fff; border:1px solid var(--mid-gray); border-radius:12px; padding:.9rem 1.2rem; display:flex; align-items:center; gap:.7rem; box-shadow:0 8px 30px rgba(0,0,0,.08); }
+.dn-badge-label { font-size:.68rem; color:var(--text-light); text-transform:uppercase; letter-spacing:.1em; }
+.dn-badge-val { font-size:.9rem; font-weight:600; color:var(--text-dark); }
+.dn-scroll-hint { position:absolute; bottom:2rem; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:.5rem; color:var(--text-light); font-size:.65rem; letter-spacing:.2em; text-transform:uppercase; animation:bob 2.5s ease-in-out infinite; }
+.dn-scroll-hint::after { content:''; display:block; width:1px; height:40px; background:linear-gradient(to bottom,var(--crimson),transparent); animation:grow-line 2.5s ease-in-out infinite; }
+@keyframes bob { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+@keyframes grow-line { 0%,100%{opacity:.3;height:28px} 50%{opacity:1;height:44px} }
+
+@media(max-width:900px){
+  .dn-hero { grid-template-columns:1fr; padding:7rem 1.5rem 4rem; text-align:center; }
+  .dn-hero-bg { display:none; }
+  .dn-hero-content { padding-right:0; }
+  .dn-hero-tag { justify-content:center; }
+  .dn-hero-sub { margin:0 auto 2rem; }
+  .dn-hero-ctas { justify-content:center; }
+  .dn-hero-image-wrap { margin-top:2.5rem; }
+  .dn-hero-img { width:220px; }
+  .dn-hero-badge { position:static; margin-top:1.5rem; justify-content:center; }
+  .dn-scroll-hint { display:none; }
+}
+
+/* ── FAMILY PACK BANNER ── */
+.dn-pack-banner {
+  background: linear-gradient(135deg, var(--crimson-deep) 0%, var(--crimson) 50%, var(--crimson-dark) 100%);
+  padding: 4rem 5rem;
+  position: relative;
+  overflow: hidden;
+}
+.dn-pack-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,.03) 30px, rgba(255,255,255,.03) 31px);
+}
+.dn-pack-banner::after {
+  content: '';
+  position: absolute;
+  right: -100px;
+  top: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255,255,255,.07) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.dn-pack-inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3rem;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.dn-pack-label {
+  font-size: .65rem;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.6);
+  font-weight: 600;
+  margin-bottom: .7rem;
+}
+.dn-pack-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 3vw, 2.8rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+.dn-pack-title em { font-style: italic; color: rgba(255,220,220,1); }
+.dn-pack-desc {
+  font-size: .9rem;
+  color: rgba(255,255,255,.75);
+  line-height: 1.8;
+  max-width: 520px;
+  font-weight: 300;
+}
+.dn-pack-math {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 2rem 2.5rem;
+  min-width: 260px;
+  backdrop-filter: blur(8px);
+}
+.dn-pack-math-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  font-size: .82rem;
+  color: rgba(255,255,255,.7);
+}
+.dn-pack-math-row strong { color: #fff; font-weight: 600; }
+.dn-pack-math-divider { height: 1px; background: rgba(255,255,255,.15); }
+.dn-pack-math-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2rem;
+}
+.dn-pack-math-total-label {
+  font-size: .78rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.8);
+  font-weight: 600;
+}
+.dn-pack-math-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+}
+.dn-pack-math-price span {
+  font-size: .75rem;
+  font-family: 'Outfit', sans-serif;
+  color: rgba(255,255,255,.5);
+  font-weight: 400;
+  margin-left: .3rem;
+}
+.dn-pack-timeline {
+  display: flex;
+  gap: 0;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dn-pack-month {
+  flex: 1;
+  text-align: center;
+  padding: .6rem .3rem;
+  font-size: .62rem;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(255,255,255,.1);
+  position: relative;
+}
+.dn-pack-month:last-child { border-right: none; }
+.dn-pack-month.change {
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font-weight: 600;
+}
+.dn-pack-month.change::before {
+  content: '🔄';
+  display: block;
+  font-size: .8rem;
+  margin-bottom: .2rem;
+}
+.dn-pack-timeline-label {
+  font-size: .65rem;
+  color: rgba(255,255,255,.4);
+  text-align: center;
+  margin-top: .5rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.dn-pack-perks {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+.dn-pack-perk {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .78rem;
+  color: rgba(255,255,255,.75);
+}
+.dn-pack-perk-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,220,220,.8);
+  flex-shrink: 0;
+}
+
+@media(max-width:900px){
+  .dn-pack-banner { padding: 3.5rem 1.5rem; }
+  .dn-pack-inner { grid-template-columns: 1fr; gap: 2rem; }
+  .dn-pack-math { min-width: unset; }
+}
+
+/* ── VIDEO PLACEHOLDER ── */
+.dn-video-section {
+  padding:5rem 5rem 6rem;
+  background:var(--text-dark);
+  position:relative; overflow:hidden;
+}
+.dn-video-section::before {
+  content:'';
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px),
+             repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,.015) 40px,rgba(255,255,255,.015) 41px);
+}
+.dn-video-label { font-size:.65rem; letter-spacing:.32em; text-transform:uppercase; color:var(--crimson-light); font-weight:600; margin-bottom:.8rem; position:relative; z-index:2; text-align:center; }
+.dn-video-title { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3vw,3rem); color:#fff; font-weight:700; line-height:1.15; margin-bottom:3rem; text-align:center; position:relative; z-index:2; }
+.dn-video-title em { color:var(--crimson-light); font-style:italic; }
+.dn-video-placeholder {
+  position:relative; z-index:2; width:100%; max-width:900px; margin:0 auto;
+  aspect-ratio:16/9; border-radius:4px; overflow:hidden;
+  background:linear-gradient(135deg,#1a0409 0%,#2d0714 40%,#1a0409 100%);
+  border:1px solid rgba(200,16,46,.25);
+  box-shadow:0 0 0 1px rgba(200,16,46,.1), 0 40px 80px rgba(0,0,0,.6), 0 0 60px rgba(200,16,46,.08);
+  cursor:pointer;
+}
+.dn-video-grid {
+  position:absolute; inset:0;
+  background-image:linear-gradient(rgba(200,16,46,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(200,16,46,.04) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.dn-video-glow {
+  position:absolute; top:50%; left:50%; width:400px; height:400px;
+  background:radial-gradient(circle,rgba(200,16,46,.18) 0%,transparent 70%);
+  transform:translate(-50%,-50%);
+  animation:vglow 3s ease-in-out infinite;
+}
+@keyframes vglow { 0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+.dn-video-corner { position:absolute; width:24px; height:24px; border-color:var(--crimson); border-style:solid; opacity:.7; }
+.dn-video-corner-tl { top:16px; left:16px; border-width:2px 0 0 2px; }
+.dn-video-corner-tr { top:16px; right:16px; border-width:2px 2px 0 0; }
+.dn-video-corner-bl { bottom:16px; left:16px; border-width:0 0 2px 2px; }
+.dn-video-corner-br { bottom:16px; right:16px; border-width:0 2px 2px 0; }
+.dn-video-play-btn {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:80px; height:80px; border-radius:50%;
+  background:var(--crimson); border:none;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 0 rgba(200,16,46,.5);
+  animation:play-pulse 2.5s ease-out infinite;
+  transition:transform .3s, background .3s;
+  z-index:10;
+}
+.dn-video-play-btn:hover { background:var(--crimson-dark); transform:translate(-50%,-50%) scale(1.1); }
+@keyframes play-pulse { 0%{box-shadow:0 0 0 0 rgba(200,16,46,.5)} 70%{box-shadow:0 0 0 24px rgba(200,16,46,0)} 100%{box-shadow:0 0 0 0 rgba(200,16,46,0)} }
+.dn-play-icon { width:0; height:0; border-style:solid; border-width:12px 0 12px 22px; border-color:transparent transparent transparent #fff; margin-left:4px; }
+.dn-video-caption { position:absolute; bottom:1.5rem; left:50%; transform:translateX(-50%); white-space:nowrap; font-size:.68rem; letter-spacing:.25em; text-transform:uppercase; color:rgba(255,255,255,.35); }
+.dn-video-scanline { position:absolute; top:0; left:0; width:100%; height:2px; background:rgba(200,16,46,.3); animation:scanline 4s linear infinite; }
+@keyframes scanline { 0%{top:-2px;opacity:0} 5%{opacity:1} 95%{opacity:1} 100%{top:100%;opacity:0} }
+.dn-video-duration { position:absolute; top:1.2rem; right:5rem; font-size:.65rem; color:rgba(255,255,255,.3); letter-spacing:.1em; font-family:'Outfit',sans-serif; }
+.dn-video-live { position:absolute; top:1.2rem; left:1.5rem; display:flex; align-items:center; gap:.4rem; font-size:.62rem; color:rgba(255,255,255,.4); letter-spacing:.15em; text-transform:uppercase; }
+.dn-video-live::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--crimson); animation:blink 1.5s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.dn-video-attach-hint { text-align:center; margin-top:1.5rem; font-size:.72rem; color:rgba(255,255,255,.28); letter-spacing:.15em; text-transform:uppercase; position:relative; z-index:2; }
+
+@media(max-width:768px){
+  .dn-video-section { padding:4rem 1.2rem 4.5rem; }
+}
+
+/* ── Scroll Stage ── */
+.dn-scroll-stage { position:relative; height:600vh; background:var(--white); }
+.dn-sticky-canvas { position:sticky; top:0; height:100vh; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; background:var(--white); }
+.dn-brush-scene { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+
+#dn-brush-wrapper { 
+  position:relative; 
+  transform-origin:center center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#dn-brush-img { 
+  width:220px; 
+  filter:drop-shadow(0 30px 60px rgba(200,16,46,.14)); 
+  display:block;
+}
+
+@media(max-width:768px){
+  #dn-brush-img { width:140px; }
+  .dn-sticky-canvas { align-items:center; }
+  #dn-brush-wrapper { min-width:140px; }
+}
+
+.dn-img-highlight { position:absolute; border-radius:50%; border:2px solid var(--crimson); opacity:0; pointer-events:none; transition:opacity .5s; animation:ring-pulse 2.2s ease-in-out infinite; }
+@keyframes ring-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(200,16,46,.25)} 50%{box-shadow:0 0 0 10px rgba(200,16,46,0)} }
+.dn-img-highlight.active { opacity:1; }
+
+.dn-feature-panel { position:absolute; width:220px; opacity:0; transition:opacity .6s ease,transform .6s ease; pointer-events:none; transform:translateY(12px); }
+.dn-feature-panel.left { right:calc(50% + 160px); text-align:right; }
+.dn-feature-panel.right { left:calc(50% + 160px); }
+.dn-feature-panel.visible { opacity:1; transform:translateY(0); }
+.dn-fp-tag { font-size:.6rem; letter-spacing:.28em; text-transform:uppercase; color:var(--crimson); margin-bottom:.4rem; font-weight:600; }
+.dn-fp-title { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; color:var(--text-dark); line-height:1.15; margin-bottom:.5rem; }
+.dn-fp-desc { font-size:.78rem; color:var(--text-mid); line-height:1.7; font-weight:300; }
+.dn-fp-line { position:absolute; top:28px; height:1px; background:var(--crimson); opacity:0; transition:opacity .6s,width .6s; width:0; }
+.dn-feature-panel.left .dn-fp-line { left:100%; background:linear-gradient(to right,transparent,var(--crimson)); }
+.dn-feature-panel.right .dn-fp-line { right:100%; background:linear-gradient(to left,transparent,var(--crimson)); }
+.dn-feature-panel.visible .dn-fp-line { opacity:1; width:50px; }
+
+/* ── Mobile feature card — TOP position (empty white space above brush) ── */
+.dn-mobile-feature-card {
+  display: none;
+  position: absolute;
+  top: 6vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.97);
+  border: 1px solid var(--mid-gray);
+  border-left: 3px solid var(--crimson);
+  border-radius: 4px;
+  padding: .9rem 1.2rem;
+  width: calc(100% - 3rem);
+  max-width: 320px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.07);
+  opacity: 0;
+  transition: opacity .4s ease;
+  z-index: 10;
+}
+.dn-mobile-feature-card.visible { opacity: 1; }
+.dn-mobile-fp-tag { font-size: .58rem; letter-spacing: .25em; text-transform: uppercase; color: var(--crimson); font-weight: 600; margin-bottom: .3rem; }
+.dn-mobile-fp-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--text-dark); margin-bottom: .25rem; }
+.dn-mobile-fp-desc { font-size: .74rem; color: var(--text-mid); line-height: 1.6; font-weight: 300; }
+
+@media(max-width:768px){
+  .dn-feature-panel { display:none; }
+  .dn-mobile-feature-card { display: block; }
+}
+
+#dn-phase-label { 
+  position:absolute; 
+  bottom:6vh; 
+  left:50%; 
+  transform:translateX(-50%); 
+  text-align:center; 
+  opacity:0; 
+  transition:opacity .5s; 
+  pointer-events:none; 
+}
+#dn-phase-label.visible { opacity:1; }
+.dn-pl-step { font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:var(--crimson); font-weight:600; margin-bottom:.2rem; }
+.dn-pl-name { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:400; color:var(--text-dark); }
+
+@media(max-width:768px){
+  #dn-phase-label { bottom:5vh; }
+  .dn-pl-name { font-size:1.2rem; }
+}
+
+#dn-progress-dots { position:fixed; right:1.5rem; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:.7rem; z-index:50; }
+.dn-dot { width:6px; height:6px; border-radius:50%; border:1.5px solid var(--text-light); transition:all .3s; }
+.dn-dot.active { background:var(--crimson); border-color:var(--crimson); transform:scale(1.5); }
+
+@media(max-width:768px){
+  #dn-progress-dots { right:.8rem; }
+}
+
+/* ── Features Grid ── */
+.dn-features-grid { padding:6rem 5rem; background:var(--off-white); border-top:1px solid var(--mid-gray); }
+.dn-section-label { font-size:.63rem; letter-spacing:.3em; text-transform:uppercase; color:var(--crimson); font-weight:600; margin-bottom:.8rem; }
+.dn-section-title { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3vw,2.8rem); font-weight:700; color:var(--text-dark); margin-bottom:3rem; max-width:480px; line-height:1.2; }
+.dn-section-title em { color:var(--crimson); font-style:italic; }
+.dn-features-inner { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5px; background:var(--mid-gray); border:1.5px solid var(--mid-gray); }
+.dn-feat-card { background:var(--white); padding:2.5rem 2rem; opacity:0; transform:translateY(24px); transition:opacity .6s,transform .6s; position:relative; overflow:hidden; }
+.dn-feat-card::before { content:''; position:absolute; bottom:0; left:0; width:0; height:2px; background:var(--crimson); transition:width .4s; }
+.dn-feat-card:hover::before { width:100%; }
+.dn-feat-card.visible { opacity:1; transform:translateY(0); }
+.dn-feat-num { font-family:'Playfair Display',serif; font-size:3rem; font-weight:700; color:rgba(200,16,46,.08); line-height:1; margin-bottom:.8rem; }
+.dn-feat-icon { font-size:1.3rem; margin-bottom:.7rem; }
+.dn-feat-title { font-size:.93rem; font-weight:600; color:var(--text-dark); margin-bottom:.5rem; letter-spacing:.02em; }
+.dn-feat-text { font-size:.8rem; color:var(--text-mid); line-height:1.7; font-weight:300; }
+
+@media(max-width:900px){ .dn-features-inner { grid-template-columns:1fr 1fr; } }
+@media(max-width:600px){ .dn-features-inner { grid-template-columns:1fr; } .dn-features-grid { padding:5rem 1.4rem; } }
+
+/* ── Testimonials — Infinite auto-scroll marquee ── */
+.dn-social { padding:6rem 0 6rem; background:var(--white); overflow:hidden; }
+.dn-social-header { padding: 0 5rem 3rem; text-align:center; }
+.dn-social-header .dn-section-title { margin: 0 auto; }
+
+/* Outer wrapper clips the scrolling inner track */
+.dn-reviews-track-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 1rem 0 2rem;
+}
+/* Fade edges */
+.dn-reviews-track-wrapper::before,
+.dn-reviews-track-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.dn-reviews-track-wrapper::before { left: 0; background: linear-gradient(to right, var(--white), transparent); }
+.dn-reviews-track-wrapper::after  { right: 0; background: linear-gradient(to left, var(--white), transparent); }
+
+/* Inner track — uses CSS animation for smooth infinite scroll */
+.dn-reviews-scroll-track {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+  animation: marquee-scroll 30s linear infinite;
+  will-change: transform;
+}
+.dn-reviews-track-wrapper:hover .dn-reviews-scroll-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.dn-review-card {
+  background: var(--off-white);
+  border: 1px solid var(--mid-gray);
+  padding: 2rem;
+  text-align: left;
+  position: relative;
+  flex: 0 0 300px;
+  border-radius: 4px;
+  transition: transform .3s, box-shadow .3s;
+}
+.dn-review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.08);
+}
+.dn-review-card::before {
+  content: '\u201C';
+  position: absolute;
+  top: 1.2rem; right: 1.5rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 3rem;
+  color: var(--crimson);
+  opacity: .2;
+  line-height: 1;
+}
+
+.dn-stars { color:var(--gold); font-size:.85rem; margin-bottom:.8rem; }
+.dn-review-text { font-size:.82rem; color:var(--text-mid); line-height:1.75; margin-bottom:1.2rem; font-weight:300; }
+.dn-review-author { font-size:.76rem; color:var(--text-dark); font-weight:600; letter-spacing:.05em; }
+
+.dn-stats-row { display:flex; justify-content:center; gap:4rem; flex-wrap:wrap; padding: 3rem 5rem 0; border-top:1px solid var(--mid-gray); margin: 0 3rem; }
+.dn-stat-num { font-family:'Playfair Display',serif; font-size:2.8rem; font-weight:700; color:var(--crimson); line-height:1.1; }
+.dn-stat-label { font-size:.7rem; color:var(--text-light); letter-spacing:.12em; text-transform:uppercase; margin-top:.3rem; }
+
+@media(max-width:900px){ 
+  .dn-social { padding: 5rem 0; }
+  .dn-social-header { padding: 0 1.4rem 2.5rem; }
+  .dn-stats-row { gap:2.5rem; padding: 2.5rem 1.4rem 0; margin: 0 1rem; }
+  .dn-review-card { flex: 0 0 260px; }
+}
+
+/* ── Order ── */
+.dn-order { padding:6rem 5rem; display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:start; background:var(--crimson-pale); border-top:1px solid rgba(200,16,46,.12); }
+.dn-order-title { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3vw,3.2rem); font-weight:700; color:var(--text-dark); line-height:1.1; margin-bottom:1.2rem; }
+.dn-order-title em { color:var(--crimson); font-style:italic; }
+.dn-order-desc { font-size:.88rem; color:var(--text-mid); line-height:1.8; margin-bottom:2rem; font-weight:300; }
+.dn-price-row { display:flex; align-items:baseline; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.dn-price-main { font-family:'Playfair Display',serif; font-size:2.8rem; color:var(--crimson); font-weight:700; }
+.dn-price-old { font-size:1.1rem; color:var(--text-light); text-decoration:line-through; }
+.dn-price-badge { background:var(--crimson); color:#fff; font-size:.66rem; font-weight:600; letter-spacing:.1em; padding:.3rem .7rem; text-transform:uppercase; border-radius:2px; align-self:flex-start; margin-top:.6rem; }
+.dn-include-item { display:flex; align-items:center; gap:.8rem; font-size:.82rem; color:var(--text-mid); padding:.6rem 0; border-bottom:1px solid rgba(200,16,46,.1); }
+.dn-check { color:var(--crimson); font-size:.82rem; font-weight:700; }
+.dn-form-card { background:var(--white); border:1px solid var(--mid-gray); padding:2.5rem; box-shadow:0 4px 30px rgba(0,0,0,.06); }
+.dn-form-title { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--text-dark); margin-bottom:1.8rem; }
+.dn-field { margin-bottom:1.1rem; }
+.dn-field label { display:block; font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; color:var(--text-light); margin-bottom:.5rem; font-weight:600; }
+.dn-field input { width:100%; background:var(--off-white); border:1px solid var(--mid-gray); color:var(--text-dark); padding:.75rem 1rem; font-family:'Outfit',sans-serif; font-size:.86rem; outline:none; transition:border-color .3s,box-shadow .3s; border-radius:2px; }
+.dn-field input:focus { border-color:var(--crimson); box-shadow:0 0 0 3px rgba(200,16,46,.08); }
+.dn-field input::placeholder { color:var(--text-light); }
+.dn-field input.error { border-color:var(--crimson); }
+.dn-field-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.dn-qty-selector { display:flex; align-items:center; }
+.dn-qty-btn { background:var(--light-gray); border:1px solid var(--mid-gray); color:var(--text-dark); width:40px; height:44px; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+.dn-qty-btn:hover { background:var(--crimson-pale); color:var(--crimson); }
+.dn-qty-val { background:var(--off-white); border:1px solid var(--mid-gray); border-left:none; border-right:none; color:var(--text-dark); width:50px; height:44px; text-align:center; font-size:.95rem; font-family:'Outfit',sans-serif; display:flex; align-items:center; justify-content:center; }
+
+.dn-pack-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .8rem;
+  margin-bottom: 1.2rem;
+}
+.dn-pack-option {
+  border: 1.5px solid var(--mid-gray);
+  border-radius: 4px;
+  padding: .9rem;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--off-white);
+  text-align: center;
+}
+.dn-pack-option:hover { border-color: var(--crimson); background: var(--crimson-pale); }
+.dn-pack-option.selected { border-color: var(--crimson); background: var(--crimson-pale); }
+.dn-pack-option-name { font-size: .75rem; font-weight: 600; color: var(--text-dark); margin-bottom: .2rem; }
+.dn-pack-option-detail { font-size: .65rem; color: var(--text-mid); letter-spacing: .04em; }
+.dn-pack-option-price { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--crimson); font-weight: 700; margin-top: .3rem; }
+.dn-pack-option-badge { display: inline-block; background: var(--crimson); color: #fff; font-size: .55rem; font-weight: 700; letter-spacing: .08em; padding: .15rem .4rem; border-radius: 2px; text-transform: uppercase; margin-top: .3rem; }
+
+.dn-order-total { display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--mid-gray); padding-top:1.2rem; margin-top:1.2rem; }
+.dn-total-label { font-size:.73rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text-light); font-weight:600; }
+.dn-total-price { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--crimson); font-weight:700; }
+.dn-submit-btn { width:100%; margin-top:1.5rem; background:var(--crimson); color:#fff; border:none; padding:1.1rem; font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; border-radius:2px; transition:all .3s; }
+.dn-submit-btn:hover { background:var(--crimson-dark); transform:translateY(-1px); box-shadow:0 10px 28px rgba(200,16,46,.28); }
+.dn-trust-badges { display:flex; gap:1.5rem; margin-top:1.1rem; justify-content:center; flex-wrap:wrap; }
+.dn-trust-b { font-size:.66rem; color:var(--text-light); letter-spacing:.06em; }
+.dn-trust-b span { color:var(--crimson); margin-right:.2rem; }
+
+@media(max-width:900px){ .dn-order { grid-template-columns:1fr; gap:3rem; padding:5rem 1.4rem; } }
+@media(max-width:480px){ .dn-field-row { grid-template-columns:1fr; } .dn-pack-select { grid-template-columns:1fr 1fr; } }
+
+/* ── Footer ── */
+.dn-footer { border-top:1px solid var(--mid-gray); padding:2.2rem 3rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; background:var(--white); }
+.dn-footer-logo { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--crimson); letter-spacing:.08em; font-weight:700; }
+.dn-footer-copy { font-size:.71rem; color:var(--text-light); }
+.dn-footer-links { display:flex; gap:2rem; }
+.dn-footer-links a { font-size:.71rem; color:var(--text-light); text-decoration:none; transition:color .3s; }
+.dn-footer-links a:hover { color:var(--crimson); }
+@media(max-width:600px){ .dn-footer { flex-direction:column; text-align:center; padding:2rem 1.4rem; } }
+
+/* ── Toast ── */
+.dn-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px); background:var(--crimson); color:#fff; padding:1rem 2rem; font-weight:500; font-size:.88rem; z-index:9999; transition:transform .4s cubic-bezier(.34,1.56,.64,1); white-space:nowrap; border-radius:4px; box-shadow:0 8px 24px rgba(200,16,46,.3); }
+.dn-toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── VIDEO MODAL ── */
+.dn-video-modal { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; }
+.dn-video-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(12px); animation:fadeIn 0.4s ease; }
+.dn-video-container { position:relative; width:80%; max-width:900px; aspect-ratio:16/9; background:#000; border-radius:8px; overflow:hidden; z-index:2; transform:scale(0.9); animation:zoomIn 0.4s ease forwards; }
+.dn-video-close { position:absolute; top:10px; right:14px; background:rgba(0,0,0,0.6); border:none; color:#fff; font-size:1.2rem; padding:6px 10px; cursor:pointer; z-index:10; border-radius:4px; }
+.dn-video-close:hover { background:var(--crimson); }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes zoomIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+`;
+
+/* ─── CONSTANTS ──────────────────────────────────────────────── */
+const SINGLE_PRICE = 599;
+const FAMILY_PACK_PRICE = 5990;
+const FEATURES = [
+  { num:"01", icon:"🦷", title:"Nano Bristle Technology", text:"10,000 micro-filaments per cm² with varying stiffness — hard on plaque, gentle on enamel and gums." },
+  { num:"02", icon:"✋", title:"Ergonomic Red Grip", text:"Dual-material TPE inlay provides non-slip control and reduces wrist strain during the full two-minute brush." },
+  { num:"03", icon:"🔬", title:"Anti-Bacterial Materials", text:"Medical-grade polypropylene inhibits bacteria build-up between bristle tufts, keeping each brush hygienic longer." },
+  { num:"04", icon:"💧", title:"Easy-Rinse Design", text:"Open bristle cluster spacing allows water to flow through freely, washing away toothpaste and debris completely." },
+  { num:"05", icon:"🩺", title:"Dentist Recommended", text:"Clinically tested and recommended by over 200 dental professionals across India for daily home care." },
+  { num:"06", icon:"♻️", title:"Replaceable Head System", text:"Swap only the bristle head every 3 months. The durable handle lasts years, reducing plastic waste by 70%." },
+];
+const REVIEWS = [
+  { text:"The red grip is so comfortable — I never feel like I'm pressing too hard. My dentist noticed my gums are healthier after just 2 months.", author:"Arjun M.", city:"Mumbai" },
+  { text:"My dentist actually noticed a difference at my last checkup. Less plaque, healthier gums. She asked what I'd changed — I showed her DENTALL.", author:"Priya S.", city:"Bangalore" },
+  { text:"The bristles are incredibly soft yet my teeth feel polished clean. It's the only toothbrush I've used that doesn't leave my gums sore.", author:"Riya K.", city:"Chennai" },
+  { text:"We got the family pack for all four of us. The schedule is genius — every 4 months we simply swap and we've never missed a replacement since.", author:"Vikram T.", city:"Pune" },
+  { text:"Worth every rupee. My kids actually look forward to brushing now. The red design is fun and the bristles are gentle enough for them.", author:"Sunita R.", city:"Delhi" },
+  { text:"Switched from an electric brush and honestly the clean feels just as thorough. The ergonomic handle makes all the difference.", author:"Karthik N.", city:"Hyderabad" },
+];
+const PHASES = [
+  { name:'Brush Overview', step:'Introducing' },
+  { name:'The Bristle Head', step:'Part 01' },
+  { name:'The Grip Body', step:'Part 02' },
+  { name:'The Handle Base', step:'Part 03' },
+];
+const MOBILE_PANELS = {
+  1: { tag:'01 — Bristle Head', title:'Ultra-Soft Nano Bristles', desc:'10,000 micro-filaments per cm² reach between teeth and below the gumline, removing 99.3% of plaque.' },
+  2: { tag:'02 — Ergonomic Handle', title:'Precision Grip Zone', desc:'Dual-material soft-touch grip contoured to the hand. Red TPE inlay provides non-slip control at every angle.' },
+  3: { tag:'03 — Handle End', title:'Anti-Slip Base', desc:'The flared end provides stability on wet surfaces and an ergonomic rest point for the palm.' },
+};
+
+/* ─── HELPERS ─────────────────────────────────────────────────── */
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+function easeInOut(t) { return t < .5 ? 2*t*t : -1+(4-2*t)*t; }
+
+/* ─── APP ─────────────────────────────────────────────────────── */
+export default function DentallApp() {
+  const [cursorPos, setCursorPos] = useState({ x:-100, y:-100 });
+  const [cursorBig, setCursorBig] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const scrollStageRef = useRef(null);
+  const [brushTransform, setBrushTransform] = useState({ scale:1, ty:0, rot:-6 });
+  const [phaseIdx, setPhaseIdx] = useState(-1);
+  const [dotIdx, setDotIdx] = useState(0);
+  const [activeRings, setActiveRings] = useState([false,false,false]);
+  const [visiblePanels, setVisiblePanels] = useState([]);
+  const [mobilePanelPhase, setMobilePanelPhase] = useState(0);
+
+  const featRefs = useRef([]);
+  const [featVisible, setFeatVisible] = useState(Array(6).fill(false));
+
+  const [selectedPack, setSelectedPack] = useState('family');
+  const [qty, setQty] = useState(1);
+  const [form, setForm] = useState({ fname:'', lname:'', email:'', phone:'', address:'' });
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+
+  const packPrice = selectedPack === 'family' ? FAMILY_PACK_PRICE : SINGLE_PRICE;
+  const total = packPrice * qty;
+
+  /* ── inject CSS ── */
+  useEffect(() => {
+    const tag = document.createElement('style');
+    tag.textContent = css;
+    document.head.appendChild(tag);
+    return () => document.head.removeChild(tag);
+  }, []);
+
+  /* ── custom cursor ── */
+  useEffect(() => {
+    const move = e => setCursorPos({ x:e.clientX, y:e.clientY });
+    const over = e => { if(['BUTTON','A','INPUT'].includes(e.target.tagName)) setCursorBig(true); };
+    const out = () => setCursorBig(false);
+    window.addEventListener('mousemove', move);
+    document.addEventListener('mouseover', over);
+    document.addEventListener('mouseout', out);
+    return () => {
+      window.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseover', over);
+      document.removeEventListener('mouseout', out);
+    };
+  }, []);
+
+  /* ── scroll stage ── */
+  useEffect(() => {
+    const onScroll = () => {
+      const stage = scrollStageRef.current;
+      if (!stage) return;
+      const rect = stage.getBoundingClientRect();
+      const stageH = stage.offsetHeight - window.innerHeight;
+      const scrolled = -rect.top;
+      const progress = clamp(scrolled / stageH, 0, 1);
+      const isMobile = window.innerWidth <= 768;
+
+      let scale = 1, ty = 0, rot = -6;
+      let rings = [false,false,false], panels = [], phase = -1, dot = 0;
+      let mobilePhase = 0;
+
+      if (progress < 0.08) {
+        const maxScale = isMobile ? 1.2 : 1.05;
+        scale = lerp(isMobile ? 0.9 : .85, maxScale, easeInOut(progress/0.08));
+        rot = lerp(-10,-6,progress/0.08); dot=0;
+      } else if (progress < 0.18) {
+        const t=(progress-0.08)/0.1;
+        const maxS = isMobile ? 1.6 : 2.0;
+        const maxTY = isMobile ? 60 : 150;
+        scale=lerp(isMobile ? 1.2 : 1.05, maxS, easeInOut(t));
+        ty=lerp(0, maxTY, easeInOut(t));
+        rot=lerp(-6,0,t); dot=1;
+      } else if (progress < 0.35) {
+        scale= isMobile ? 1.6 : 2.0;
+        ty= isMobile ? 60 : 150;
+        rot=0; rings=[true,false,false]; phase=1; dot=1; mobilePhase=1;
+        if ((progress-0.18)/0.17 > 0.2) panels=['fp-head','fp-head2'];
+      } else if (progress < 0.45) {
+        const t=(progress-0.35)/0.1;
+        scale=lerp(isMobile ? 1.6 : 2.0, 1.0, easeInOut(t));
+        ty=lerp(isMobile ? 60 : 150, 0, easeInOut(t));
+        rot=lerp(0,-4,t); dot=1;
+      } else if (progress < 0.52) {
+        const t=(progress-0.45)/0.07;
+        const maxS2 = isMobile ? 1.5 : 1.7;
+        scale=lerp(1.0, maxS2, easeInOut(t)); rot=lerp(-4,2,t); dot=2;
+      } else if (progress < 0.70) {
+        scale= isMobile ? 1.5 : 1.7;
+        rot=2; rings=[false,true,false]; phase=2; dot=2; mobilePhase=2;
+        if ((progress-0.52)/0.18 > 0.2) panels=['fp-body','fp-body2'];
+      } else if (progress < 0.79) {
+        const t=(progress-0.70)/0.09;
+        scale=lerp(isMobile ? 1.5 : 1.7, 1.0, easeInOut(t));
+        rot=lerp(2,-6,t); dot=2;
+      } else if (progress < 0.87) {
+        const t=(progress-0.79)/0.08;
+        const maxS3 = isMobile ? 1.7 : 2.2;
+        const minTY = isMobile ? -80 : -160;
+        scale=lerp(1.0, maxS3, easeInOut(t));
+        ty=lerp(0, minTY, easeInOut(t));
+        rot=lerp(-6,0,t); dot=3;
+      } else {
+        scale= isMobile ? 1.7 : 2.2;
+        ty= isMobile ? -80 : -160;
+        rot=0; rings=[false,false,true]; phase=3; dot=3; mobilePhase=3;
+        if ((progress-0.87)/0.13 > 0.2) panels=['fp-handle','fp-handle2'];
+      }
+
+      setBrushTransform({ scale, ty, rot });
+      setActiveRings(rings);
+      setPhaseIdx(phase);
+      setDotIdx(dot);
+      setVisiblePanels(panels);
+      setMobilePanelPhase(mobilePhase);
+    };
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* ── intersection observer for feat cards ── */
+  useEffect(() => {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        if (e.isIntersecting) setFeatVisible(prev => { const n=[...prev]; n[idx]=true; return n; });
+      });
+    }, { threshold:.15 });
+    featRefs.current.forEach(el => el && obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  /* ── order ── */
+  const changeQty = d => setQty(q => Math.max(1, Math.min(10, q + d)));
+  const handleField = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const placeOrder = () => {
+    const errs = {};
+    ['fname','email','phone','address'].forEach(k => { if (!form[k].trim()) errs[k]=true; });
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+    setToast(true);
+    setTimeout(() => setToast(false), 4000);
+    setForm({ fname:'',lname:'',email:'',phone:'',address:'' });
+    setQty(1);
+  };
+
+  const scrollTo = id => {
+    document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
+    setDrawerOpen(false);
+  };
+
+  const mobilePanel = mobilePanelPhase > 0 ? MOBILE_PANELS[mobilePanelPhase] : null;
+
+  /* ─── RENDER ─────────────────────────────────────────────────── */
+  return (
+    <>
+      <div className="dentall-cursor-dot" style={{ left:cursorPos.x, top:cursorPos.y, width:cursorBig?18:10, height:cursorBig?18:10 }} />
+      <div className="dentall-cursor-ring" style={{ left:cursorPos.x, top:cursorPos.y }} />
+
+      <div className={`dn-toast ${toast?'show':''}`}>✓ Order placed! We'll contact you within 24 hours.</div>
+
+      {/* Nav */}
+      <nav className="dn-nav">
+        <div className="dn-logo">DENTALL</div>
+        <div className="dn-nav-links">
+          <a href="#features-grid" onClick={e=>{e.preventDefault();scrollTo('features-grid')}}>Features</a>
+          <a href="#social" onClick={e=>{e.preventDefault();scrollTo('social')}}>Reviews</a>
+          <a href="#order" onClick={e=>{e.preventDefault();scrollTo('order')}}>Order</a>
+          <button className="dn-nav-cta" onClick={()=>scrollTo('order')}>Order Now</button>
+        </div>
+        <button className={`dn-hamburger ${drawerOpen?'open':''}`} onClick={()=>setDrawerOpen(o=>!o)} aria-label="Menu">
+          <span/><span/><span/>
+        </button>
+      </nav>
+
+      <div className={`dn-drawer ${drawerOpen?'open':''}`}>
+        <a href="#features-grid" onClick={e=>{e.preventDefault();scrollTo('features-grid')}}>Features</a>
+        <a href="#social" onClick={e=>{e.preventDefault();scrollTo('social')}}>Reviews</a>
+        <a href="#order" onClick={e=>{e.preventDefault();scrollTo('order')}}>Order</a>
+        <button className="dn-nav-cta" onClick={()=>scrollTo('order')}>Family Pack — ₹5,990</button>
+      </div>
+
+      {/* Hero */}
+      <section className="dn-hero" id="hero">
+        <div className="dn-hero-bg" />
+        <div className="dn-hero-content">
+          <div className="dn-hero-tag">Professional Dental Care</div>
+          <h1 className="dn-h1">Brush with<br/><em>Confidence</em><br/>Every Day.</h1>
+          <p className="dn-hero-sub">DENTALL's precision-engineered bristle system and ergonomic grip deliver a dentist-quality clean — every single morning. Starting at just ₹599 per brush.</p>
+          <div className="dn-hero-ctas">
+            <button className="dn-btn-primary" onClick={()=>scrollTo('order')}>Shop Now — from ₹599</button>
+            <button className="dn-btn-ghost" onClick={()=>scrollTo('scroll-stage')}>Explore Features</button>
+          </div>
+        </div>
+        <div className="dn-hero-image-wrap">
+          <img src="image/brush.png" alt="DENTALL Toothbrush" className="dn-hero-img" onError={e=>{e.target.style.opacity=0;}} />
+          <div className="dn-hero-badge">
+            <div style={{fontSize:'1.3rem'}}>🦷</div>
+            <div>
+              <div className="dn-badge-label">Dentist Rating</div>
+              <div className="dn-badge-val">★★★★★ 4.9 / 5.0</div>
+            </div>
+          </div>
+        </div>
+        <div className="dn-scroll-hint">Scroll to explore</div>
+      </section>
+
+      {/* Family Pack Banner */}
+      <section className="dn-pack-banner" id="family-pack">
+        <div className="dn-pack-inner">
+          <div>
+            <div className="dn-pack-label">The smart way to stock up</div>
+            <h2 className="dn-pack-title">One pack.<br/><em>A full year</em> of fresh smiles for the whole family.</h2>
+            <p className="dn-pack-desc">
+              Dentists recommend replacing your toothbrush every
+              <strong style={{color:'#fff'}}> 4 months</strong> — that's 3 brushes per person per year.
+              Our Family Pack of
+              <strong style={{color:'#fff'}}> 12 brushes</strong> covers a family of 4 for a full year —
+              no reordering, no forgetting, just consistent hygiene.
+            </p>
+            <div className="dn-pack-perks" style={{marginTop:'1.5rem'}}>
+              {['12 brushes in one box','Covers 4 people × 12 months','Change every 4 months — on schedule','Free shipping included','Never run out mid-year again'].map(p=>(
+                <div key={p} className="dn-pack-perk"><div className="dn-pack-perk-dot"/> {p}</div>
+              ))}
+            </div>
+            <div style={{marginTop:'1.5rem'}}>
+              <div className="dn-pack-timeline-label" style={{color:'rgba(255,255,255,.5)',marginBottom:'.5rem'}}>Replace schedule — all year covered</div>
+              <div className="dn-pack-timeline">
+                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>(
+                  <div key={m} className={`dn-pack-month ${[0,3,6,9].includes(i)?'change':''}`}>
+                    {![0,3,6,9].includes(i) && m}
+                  </div>
+                ))}
+              </div>
+              <div className="dn-pack-timeline-label" style={{color:'rgba(255,255,255,.35)',marginTop:'.4rem'}}>🔄 = swap month for all 4 family members</div>
+            </div>
+          </div>
+          <div>
+            <div className="dn-pack-math">
+              <div className="dn-pack-math-row"><span>Per brush</span><strong>₹50</strong></div>
+              <div className="dn-pack-math-row"><span>Family pack (12 brushes)</span><strong>₹599</strong></div>
+              <div className="dn-pack-math-row"><span>Per person per year</span><strong>₹150</strong></div>
+              <div className="dn-pack-math-row"><span>Per person per month</span><strong>₹12</strong></div>
+              <div className="dn-pack-math-divider"/>
+              <div className="dn-pack-math-total">
+                <div className="dn-pack-math-total-label">Family pack total</div>
+                <div className="dn-pack-math-price">₹599 <span>/ year</span></div>
+              </div>
+              <button className="dn-submit-btn" style={{margin:'1rem 0 0',fontSize:'.82rem'}} onClick={()=>scrollTo('order')}>Order Family Pack →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video */}
+      <section className="dn-video-section" id="video">
+        <div className="dn-video-label">See it in action</div>
+        <h2 className="dn-video-title">Two minutes.<br/><em>A lifetime</em> of better oral health.</h2>
+        <div className="dn-video-placeholder" onClick={() => setShowVideo(true)}>
+          <div className="dn-video-grid" />
+          <div className="dn-video-glow" />
+          <div className="dn-video-scanline" />
+          <div className="dn-video-corner dn-video-corner-tl" />
+          <div className="dn-video-corner dn-video-corner-tr" />
+          <div className="dn-video-corner dn-video-corner-bl" />
+          <div className="dn-video-corner dn-video-corner-br" />
+          <div className="dn-video-live">Product Film</div>
+          <div className="dn-video-duration">1:52</div>
+          <button className="dn-video-play-btn" aria-label="Play video"><div className="dn-play-icon" /></button>
+          <div className="dn-video-caption">DENTALL Pro — Product Story</div>
+        </div>
+        <div className="dn-video-attach-hint">↑ Attach your production video here</div>
+      </section>
+
+      {/* Scroll Stage */}
+      <section id="scroll-stage" ref={scrollStageRef} className="dn-scroll-stage">
+        <div className="dn-sticky-canvas">
+          <div className="dn-brush-scene">
+
+            {/* Mobile feature card — TOP of empty white space */}
+            <div className={`dn-mobile-feature-card ${mobilePanel ? 'visible' : ''}`}>
+              {mobilePanel && <>
+                <div className="dn-mobile-fp-tag">{mobilePanel.tag}</div>
+                <div className="dn-mobile-fp-title">{mobilePanel.title}</div>
+                <div className="dn-mobile-fp-desc">{mobilePanel.desc}</div>
+              </>}
+            </div>
+
+            <div id="dn-brush-wrapper"
+              style={{ transform:`scale(${brushTransform.scale}) translateY(${brushTransform.ty}px) rotate(${brushTransform.rot}deg)` }}>
+              <img id="dn-brush-img" src="image/brush.png" alt="DENTALL brush detail" onError={e=>{ e.target.style.opacity=0; }} />
+              <div className={`dn-img-highlight ${activeRings[0]?'active':''}`} style={{ width:70,height:70,top:'2%',left:'50%',transform:'translate(-50%,0)' }} />
+              <div className={`dn-img-highlight ${activeRings[1]?'active':''}`} style={{ width:80,height:80,top:'45%',left:'50%',transform:'translate(-50%,-50%)' }} />
+              <div className={`dn-img-highlight ${activeRings[2]?'active':''}`} style={{ width:70,height:70,bottom:'8%',left:'50%',transform:'translate(-50%,0)' }} />
+            </div>
+
+            {/* Desktop phase label */}
+            <div id="dn-phase-label" className={phaseIdx >= 0 ? 'visible' : ''}>
+              <div className="dn-pl-step">{phaseIdx>=0?PHASES[phaseIdx].step:''}</div>
+              <div className="dn-pl-name">{phaseIdx>=0?PHASES[phaseIdx].name:''}</div>
+            </div>
+
+            {/* Desktop feature panels */}
+            <div className={`dn-feature-panel right ${visiblePanels.includes('fp-head')?'visible':''}`} style={{ top:'18%' }}>
+              <div className="dn-fp-line" />
+              <div className="dn-fp-tag">01 — Bristle Head</div>
+              <div className="dn-fp-title">Ultra-Soft Nano Bristles</div>
+              <div className="dn-fp-desc">10,000 micro-filaments per cm² reach between teeth and below the gumline, removing 99.3% of plaque.</div>
+            </div>
+            <div className={`dn-feature-panel left ${visiblePanels.includes('fp-head2')?'visible':''}`} style={{ top:'40%' }}>
+              <div className="dn-fp-line" />
+              <div className="dn-fp-tag">01b — Tongue Cleaner</div>
+              <div className="dn-fp-title">Integrated Tongue Cleaner</div>
+              <div className="dn-fp-desc">Reverse-side ribbed texture eliminates odour-causing bacteria — no separate tool needed.</div>
+            </div>
+            <div className={`dn-feature-panel left ${visiblePanels.includes('fp-body')?'visible':''}`} style={{ top:'28%' }}>
+              <div className="dn-fp-line" />
+              <div className="dn-fp-tag">02 — Ergonomic Handle</div>
+              <div className="dn-fp-title">Precision Grip Zone</div>
+              <div className="dn-fp-desc">Dual-material soft-touch grip contoured to the hand. Red TPE inlay provides non-slip control at every angle.</div>
+            </div>
+            <div className={`dn-feature-panel right ${visiblePanels.includes('fp-body2')?'visible':''}`} style={{ top:'52%' }}>
+              <div className="dn-fp-line" />
+              <div className="dn-fp-tag">02b — Durability</div>
+              <div className="dn-fp-title">Long-Life Construction</div>
+              <div className="dn-fp-desc">Medical-grade polypropylene resists bacteria build-up. Replace only the head every 3 months.</div>
+            </div>
+            <div className={`dn-feature-panel right ${visiblePanels.includes('fp-handle')?'visible':''}`} style={{ top:'38%' }}>
+              <div className="dn-fp-line" />
+              <div className="dn-fp-tag">03 — Handle End</div>
+              <div className="dn-fp-title">Anti-Slip Base</div>
+              <div className="dn-fp-desc">The flared end provides stability on wet surfaces and an ergonomic rest point for the palm.</div>
+            </div>
+            <div className={`dn-feature-panel left ${visiblePanels.includes('fp-handle2')?'visible':''}`} style={{ top:'58%' }}>
+              <div className="dn-fp-line" />
+              <div className="dn-fp-tag">03b — Branding</div>
+              <div className="dn-fp-title">Dentall Certified</div>
+              <div className="dn-fp-desc">BPA-free, ISO 9001 certified. Each brush is quality tested for consistent bristle density.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Progress dots */}
+      <div id="dn-progress-dots">
+        {[0,1,2,3].map(i=><div key={i} className={`dn-dot ${dotIdx===i?'active':''}`}/>)}
+      </div>
+
+      {/* Features Grid */}
+      <section className="dn-features-grid" id="features-grid">
+        <div className="dn-section-label">What sets us apart</div>
+        <div className="dn-section-title">Engineered for <em>every tooth</em>, every day.</div>
+        <div className="dn-features-inner">
+          {FEATURES.map((f,i)=>(
+            <div key={i} ref={el=>{featRefs.current[i]=el}} data-idx={i}
+              className={`dn-feat-card ${featVisible[i]?'visible':''}`}
+              style={{ transitionDelay:`${i*0.07}s` }}>
+              <div className="dn-feat-num">{f.num}</div>
+              <div className="dn-feat-icon">{f.icon}</div>
+              <div className="dn-feat-title">{f.title}</div>
+              <div className="dn-feat-text">{f.text}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials — CSS marquee infinite scroll */}
+      <section className="dn-social" id="social">
+        <div className="dn-social-header">
+          <div className="dn-section-label">Customer voices</div>
+          <div className="dn-section-title">Trusted by <em>12,000+</em> households</div>
+        </div>
+
+        <div className="dn-reviews-track-wrapper">
+          {/* Duplicate the array so seamless loop works: when first set scrolls off, second is already in place */}
+          <div className="dn-reviews-scroll-track">
+            {[...REVIEWS, ...REVIEWS, ...REVIEWS].map((r,i)=>(
+              <div key={i} className="dn-review-card">
+                <div className="dn-stars">★★★★★</div>
+                <div className="dn-review-text">"{r.text}"</div>
+                <div className="dn-review-author">{r.author} <span style={{color:'var(--text-light)',fontWeight:400}}>— {r.city}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="dn-stats-row">
+          {[['99.3%','Plaque removed'],['12K+','Happy customers'],['4.9','Average rating'],['200+','Dentist partners']].map(([n,l])=>(
+            <div key={l} className="dn-stat">
+              <div className="dn-stat-num">{n}</div>
+              <div className="dn-stat-label">{l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Order */}
+      <section className="dn-order" id="order">
+        <div>
+          <div className="dn-section-label">Ready to upgrade?</div>
+          <div className="dn-order-title">Clean that <em>lasts</em><br/>all day long.</div>
+          <div className="dn-order-desc">Free shipping across India. 30-day return guarantee. The family pack includes 12 brushes — everything a family of 4 needs for a full year of dentist-recommended hygiene.</div>
+          <div>
+            {['12 brushes — 1 full year for 4 people','Change every 4 months — dentist-recommended','₹599 per brush, ₹5,990 for the family pack','Hygienic travel cap included','Free shipping & 30-day returns'].map(item=>(
+              <div key={item} className="dn-include-item"><span className="dn-check">✓</span>{item}</div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="dn-form-card">
+            <div className="dn-form-title">Place Your Order</div>
+            <div className="dn-field">
+              <div className="dn-pack-select">
+                <div className={`dn-pack-option ${selectedPack==='family'?'selected':''}`} onClick={()=>setSelectedPack('family')}>
+                  <div className="dn-pack-option-name">Family Pack</div>
+                  <div className="dn-pack-option-detail">12 brushes · 1 year · 4 people</div>
+                  <div className="dn-pack-option-price">₹599</div>
+                  <div className="dn-pack-option-badge">Best Value</div>
+                </div>
+              </div>
+            </div>
+            <div className="dn-field-row">
+              <div className="dn-field">
+                <label>First Name</label>
+                <input name="fname" value={form.fname} onChange={handleField} placeholder="Arjun" className={errors.fname?'error':''} />
+              </div>
+              <div className="dn-field">
+                <label>Last Name</label>
+                <input name="lname" value={form.lname} onChange={handleField} placeholder="Sharma" />
+              </div>
+            </div>
+            <div className="dn-field">
+              <label>Email Address</label>
+              <input name="email" type="email" value={form.email} onChange={handleField} placeholder="arjun@email.com" className={errors.email?'error':''} />
+            </div>
+            <div className="dn-field">
+              <label>Phone Number</label>
+              <input name="phone" type="tel" value={form.phone} onChange={handleField} placeholder="+91 98765 43210" className={errors.phone?'error':''} />
+            </div>
+            <div className="dn-field">
+              <label>Delivery Address</label>
+              <input name="address" value={form.address} onChange={handleField} placeholder="Flat no, Street, City, PIN" className={errors.address?'error':''} />
+            </div>
+            <div className="dn-field">
+              <label>Quantity</label>
+              <div className="dn-qty-selector">
+                <button className="dn-qty-btn" onClick={()=>changeQty(-1)}>−</button>
+                <div className="dn-qty-val">{qty}</div>
+                <button className="dn-qty-btn" onClick={()=>changeQty(1)}>+</button>
+              </div>
+            </div>
+            <div className="dn-order-total">
+              <div>
+                <div className="dn-total-label">Total</div>
+                <div style={{fontSize:'.68rem',color:'var(--text-light)',marginTop:'.2rem'}}>
+                  {selectedPack==='family' ? `${qty} × 12 brushes` : `${qty} × 1 brush`}
+                </div>
+              </div>
+              <div className="dn-total-price">₹{total.toLocaleString('en-IN')}</div>
+            </div>
+            <button className="dn-submit-btn" onClick={placeOrder}>Place Order Now →</button>
+            <div className="dn-trust-badges">
+              <div className="dn-trust-b"><span>🔒</span>Secure</div>
+              <div className="dn-trust-b"><span>🚚</span>Free Delivery</div>
+              <div className="dn-trust-b"><span>↩</span>30-Day Return</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="dn-footer">
+        <div className="dn-footer-logo">DENTALL</div>
+        <div className="dn-footer-copy">© 2025 Dentall. All rights reserved.</div>
+        <div className="dn-footer-links">
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Contact</a>
+        </div>
+      </footer>
+
+      {showVideo && (
+        <div className="dn-video-modal" onClick={() => setShowVideo(false)}>
+          <div className="dn-video-backdrop" />
+          <div className="dn-video-container" onClick={(e) => e.stopPropagation()}>
+            <button className="dn-video-close" onClick={() => setShowVideo(false)}>✕</button>
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/y7_2sUZiBbc?autoplay=1&mute=1"
+              title="Dentall Product Video"
+              frameBorder="0"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
