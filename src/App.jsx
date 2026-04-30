@@ -629,6 +629,81 @@ body { background:var(--white); color:var(--text-dark); font-family:'Outfit',san
 .dn-video-close:hover { background:var(--crimson); }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 @keyframes zoomIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* ── Cart Button ── */
+.dn-cart-btn {
+  position:relative; background:none; border:1.5px solid var(--crimson); color:var(--crimson);
+  padding:.5rem 1rem; border-radius:2px; font-family:'Outfit',sans-serif; font-size:.78rem;
+  font-weight:600; letter-spacing:.08em; text-transform:uppercase; transition:all .3s;
+  display:flex; align-items:center; gap:.5rem;
+}
+.dn-cart-btn:hover { background:var(--crimson-pale); }
+.dn-cart-badge {
+  background:var(--crimson); color:#fff; border-radius:50%; width:18px; height:18px;
+  font-size:.6rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+  line-height:1;
+}
+
+/* ── Cart Drawer ── */
+.dn-cart-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200;
+  opacity:0; pointer-events:none; transition:opacity .35s;
+  backdrop-filter:blur(4px);
+}
+.dn-cart-overlay.open { opacity:1; pointer-events:all; }
+
+.dn-cart-drawer {
+  position:fixed; top:0; right:0; height:100%; width:400px; max-width:100vw;
+  background:#fff; z-index:201; display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform .4s cubic-bezier(.77,0,.18,1);
+  box-shadow:-8px 0 40px rgba(0,0,0,.12);
+}
+.dn-cart-drawer.open { transform:translateX(0); }
+
+.dn-cart-head {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:1.4rem 1.6rem; border-bottom:1px solid var(--mid-gray);
+}
+.dn-cart-title { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--text-dark); font-weight:700; }
+.dn-cart-close { background:none; border:none; font-size:1.2rem; color:var(--text-mid); padding:.2rem .5rem; border-radius:2px; transition:all .2s; }
+.dn-cart-close:hover { background:var(--light-gray); color:var(--text-dark); }
+
+.dn-cart-body { flex:1; overflow-y:auto; padding:1.2rem 1.6rem; }
+
+.dn-cart-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:1rem; color:var(--text-light); }
+.dn-cart-empty-icon { font-size:3rem; opacity:.4; }
+.dn-cart-empty-text { font-size:.85rem; letter-spacing:.06em; }
+
+.dn-cart-item {
+  display:grid; grid-template-columns:auto 1fr auto; gap:1rem; align-items:center;
+  padding:1rem 0; border-bottom:1px solid var(--mid-gray);
+}
+.dn-cart-item-icon { width:48px; height:48px; background:var(--crimson-pale); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
+.dn-cart-item-info { min-width:0; }
+.dn-cart-item-name { font-size:.86rem; font-weight:600; color:var(--text-dark); margin-bottom:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dn-cart-item-price { font-size:.78rem; color:var(--crimson); font-weight:600; }
+.dn-cart-item-actions { display:flex; align-items:center; gap:.4rem; }
+.dn-cart-qty-btn { background:var(--light-gray); border:1px solid var(--mid-gray); color:var(--text-dark); width:28px; height:28px; font-size:.9rem; display:flex; align-items:center; justify-content:center; border-radius:2px; transition:background .2s; }
+.dn-cart-qty-btn:hover { background:var(--crimson-pale); color:var(--crimson); }
+.dn-cart-qty-val { width:24px; text-align:center; font-size:.85rem; font-weight:600; color:var(--text-dark); }
+.dn-cart-remove { background:none; border:none; color:var(--text-light); font-size:.85rem; padding:.2rem; margin-left:.2rem; transition:color .2s; }
+.dn-cart-remove:hover { color:var(--crimson); }
+
+.dn-cart-foot { padding:1.4rem 1.6rem; border-top:1px solid var(--mid-gray); background:var(--off-white); }
+.dn-cart-subtotal { display:flex; justify-content:space-between; margin-bottom:1rem; }
+.dn-cart-subtotal-label { font-size:.78rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-light); font-weight:600; }
+.dn-cart-subtotal-val { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--crimson); font-weight:700; }
+.dn-cart-checkout-btn { width:100%; background:var(--crimson); color:#fff; border:none; padding:1rem; font-family:'Outfit',sans-serif; font-size:.88rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; border-radius:2px; transition:all .3s; }
+.dn-cart-checkout-btn:hover { background:var(--crimson-dark); transform:translateY(-1px); box-shadow:0 10px 28px rgba(200,16,46,.28); }
+
+/* ── Add-to-cart buttons on product cards ── */
+.dn-add-cart-btn {
+  margin-top:.8rem; width:100%; background:transparent; border:1.5px solid var(--crimson);
+  color:var(--crimson); padding:.55rem 1rem; font-family:'Outfit',sans-serif; font-size:.75rem;
+  font-weight:600; letter-spacing:.08em; text-transform:uppercase; border-radius:2px;
+  transition:all .3s;
+}
+.dn-add-cart-btn:hover { background:var(--crimson); color:#fff; }
 `;
 
 /* ─── CONSTANTS ──────────────────────────────────────────────── */
@@ -690,6 +765,30 @@ export default function DentallApp() {
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+
+  /* ── cart ── */
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+
+  const addToCart = (item) => {
+    setCartItems(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) return prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
+      return [...prev, { ...item, qty: 1 }];
+    });
+    setCartOpen(true);
+  };
+
+  const updateCartQty = (id, delta) => {
+    setCartItems(prev =>
+      prev.map(i => i.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i)
+    );
+  };
+
+  const removeFromCart = (id) => setCartItems(prev => prev.filter(i => i.id !== id));
+
+  const cartCount = cartItems.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
 
   const packPrice = selectedPack === 'family' ? FAMILY_PACK_PRICE : SINGLE_PRICE;
   const total = packPrice * qty;
@@ -832,6 +931,48 @@ export default function DentallApp() {
 
       <div className={`dn-toast ${toast?'show':''}`}>✓ Order placed! We'll contact you within 24 hours.</div>
 
+      {/* Cart Overlay & Drawer */}
+      <div className={`dn-cart-overlay ${cartOpen?'open':''}`} onClick={()=>setCartOpen(false)} />
+      <div className={`dn-cart-drawer ${cartOpen?'open':''}`}>
+        <div className="dn-cart-head">
+          <div className="dn-cart-title">Your Cart {cartCount > 0 && <span style={{color:'var(--text-light)',fontSize:'.82rem',fontFamily:'Outfit',fontWeight:400}}>({cartCount} item{cartCount!==1?'s':''})</span>}</div>
+          <button className="dn-cart-close" onClick={()=>setCartOpen(false)}>✕</button>
+        </div>
+        <div className="dn-cart-body">
+          {cartItems.length === 0 ? (
+            <div className="dn-cart-empty">
+              <div className="dn-cart-empty-icon">🛒</div>
+              <div className="dn-cart-empty-text">Your cart is empty</div>
+            </div>
+          ) : (
+            cartItems.map(item => (
+              <div key={item.id} className="dn-cart-item">
+                <div className="dn-cart-item-icon">{item.icon}</div>
+                <div className="dn-cart-item-info">
+                  <div className="dn-cart-item-name">{item.name}</div>
+                  <div className="dn-cart-item-price">₹{(item.price * item.qty).toLocaleString('en-IN')}</div>
+                </div>
+                <div className="dn-cart-item-actions">
+                  <button className="dn-cart-qty-btn" onClick={()=>updateCartQty(item.id,-1)}>−</button>
+                  <div className="dn-cart-qty-val">{item.qty}</div>
+                  <button className="dn-cart-qty-btn" onClick={()=>updateCartQty(item.id,1)}>+</button>
+                  <button className="dn-cart-remove" onClick={()=>removeFromCart(item.id)} title="Remove">✕</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {cartItems.length > 0 && (
+          <div className="dn-cart-foot">
+            <div className="dn-cart-subtotal">
+              <span className="dn-cart-subtotal-label">Subtotal</span>
+              <span className="dn-cart-subtotal-val">₹{cartTotal.toLocaleString('en-IN')}</span>
+            </div>
+            <button className="dn-cart-checkout-btn" onClick={()=>{setCartOpen(false);scrollTo('order');}}>Checkout →</button>
+          </div>
+        )}
+      </div>
+
       {/* Nav */}
       <nav className="dn-nav">
         <div className="dn-logo">DENTALL</div>
@@ -839,6 +980,10 @@ export default function DentallApp() {
           <a href="#features-grid" onClick={e=>{e.preventDefault();scrollTo('features-grid')}}>Features</a>
           <a href="#social" onClick={e=>{e.preventDefault();scrollTo('social')}}>Reviews</a>
           <a href="#order" onClick={e=>{e.preventDefault();scrollTo('order')}}>Order</a>
+          <button className="dn-cart-btn" onClick={()=>setCartOpen(o=>!o)}>
+            🛒 Cart
+            {cartCount > 0 && <span className="dn-cart-badge">{cartCount}</span>}
+          </button>
           <button className="dn-nav-cta" onClick={()=>scrollTo('order')}>Order Now</button>
         </div>
         <button className={`dn-hamburger ${drawerOpen?'open':''}`} onClick={()=>setDrawerOpen(o=>!o)} aria-label="Menu">
@@ -850,6 +995,9 @@ export default function DentallApp() {
         <a href="#features-grid" onClick={e=>{e.preventDefault();scrollTo('features-grid')}}>Features</a>
         <a href="#social" onClick={e=>{e.preventDefault();scrollTo('social')}}>Reviews</a>
         <a href="#order" onClick={e=>{e.preventDefault();scrollTo('order')}}>Order</a>
+        <button className="dn-cart-btn" style={{fontSize:'1rem',padding:'.8rem 2rem'}} onClick={()=>{setDrawerOpen(false);setCartOpen(true);}}>
+          🛒 Cart {cartCount > 0 && <span className="dn-cart-badge">{cartCount}</span>}
+        </button>
         <button className="dn-nav-cta" onClick={()=>scrollTo('order')}>Family Pack — ₹5,990</button>
       </div>
 
@@ -920,6 +1068,7 @@ export default function DentallApp() {
                 <div className="dn-pack-math-price">₹599 <span>/ year</span></div>
               </div>
               <button className="dn-submit-btn" style={{margin:'1rem 0 0',fontSize:'.82rem'}} onClick={()=>scrollTo('order')}>Order Family Pack →</button>
+              <button className="dn-add-cart-btn" style={{background:'rgba(255,255,255,.1)',borderColor:'rgba(255,255,255,.4)',color:'#fff',marginTop:'.6rem'}} onClick={()=>addToCart({id:'family-pack',name:'Family Pack (12 brushes)',price:5990,icon:'🦷'})}>🛒 Add to Cart</button>
             </div>
           </div>
         </div>
@@ -1087,8 +1236,15 @@ export default function DentallApp() {
                 <div className={`dn-pack-option ${selectedPack==='family'?'selected':''}`} onClick={()=>setSelectedPack('family')}>
                   <div className="dn-pack-option-name">Family Pack</div>
                   <div className="dn-pack-option-detail">12 brushes · 1 year · 4 people</div>
-                  <div className="dn-pack-option-price">₹599</div>
+                  <div className="dn-pack-option-price">₹5,990</div>
                   <div className="dn-pack-option-badge">Best Value</div>
+                  <button className="dn-add-cart-btn" onClick={e=>{e.stopPropagation();addToCart({id:'family-pack',name:'Family Pack (12 brushes)',price:5990,icon:'🦷'});}}>+ Add to Cart</button>
+                </div>
+                <div className={`dn-pack-option ${selectedPack==='single'?'selected':''}`} onClick={()=>setSelectedPack('single')}>
+                  <div className="dn-pack-option-name">Single Brush</div>
+                  <div className="dn-pack-option-detail">1 brush · 4 months</div>
+                  <div className="dn-pack-option-price">₹599</div>
+                  <button className="dn-add-cart-btn" onClick={e=>{e.stopPropagation();addToCart({id:'single-brush',name:'Single Brush',price:599,icon:'🪥'});}}>+ Add to Cart</button>
                 </div>
               </div>
             </div>
