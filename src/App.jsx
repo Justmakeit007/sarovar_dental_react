@@ -704,6 +704,116 @@ body { background:var(--white); color:var(--text-dark); font-family:'Outfit',san
   transition:all .3s;
 }
 .dn-add-cart-btn:hover { background:var(--crimson); color:#fff; }
+
+/* ── Payment Modal ── */
+.dn-pay-overlay {
+  position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(10px);
+  animation:fadeIn .3s ease;
+}
+.dn-pay-modal {
+  background:#fff; width:100%; max-width:520px; max-height:92vh; overflow-y:auto;
+  border-radius:4px; box-shadow:0 32px 80px rgba(0,0,0,.22);
+  animation:zoomIn .35s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+}
+.dn-pay-header {
+  background:linear-gradient(135deg,var(--crimson-deep),var(--crimson));
+  padding:1.8rem 2rem 1.5rem; display:flex; justify-content:space-between; align-items:flex-start;
+}
+.dn-pay-header-left { color:#fff; }
+.dn-pay-secure-tag {
+  display:inline-flex; align-items:center; gap:.4rem; font-size:.6rem; letter-spacing:.2em;
+  text-transform:uppercase; color:rgba(255,255,255,.65); font-weight:600; margin-bottom:.5rem;
+}
+.dn-pay-secure-tag::before { content:'🔒'; font-size:.7rem; }
+.dn-pay-modal-title {
+  font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:700; color:#fff; line-height:1.1;
+}
+.dn-pay-close {
+  background:rgba(255,255,255,.15); border:none; color:#fff; width:32px; height:32px;
+  border-radius:50%; font-size:1rem; display:flex; align-items:center; justify-content:center;
+  transition:background .2s; flex-shrink:0;
+}
+.dn-pay-close:hover { background:rgba(255,255,255,.3); }
+.dn-pay-body { padding:2rem; }
+.dn-pay-order-summary {
+  background:var(--crimson-pale); border:1px solid rgba(200,16,46,.12); border-radius:4px;
+  padding:1rem 1.2rem; margin-bottom:1.8rem;
+}
+.dn-pay-summary-label { font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; color:var(--crimson); font-weight:600; margin-bottom:.8rem; }
+.dn-pay-summary-row { display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:var(--text-mid); padding:.3rem 0; }
+.dn-pay-summary-row.total { border-top:1px solid rgba(200,16,46,.15); margin-top:.5rem; padding-top:.8rem; }
+.dn-pay-summary-row.total span:first-child { font-weight:600; color:var(--text-dark); font-size:.85rem; }
+.dn-pay-summary-row.total span:last-child { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--crimson); font-weight:700; }
+.dn-pay-section-label {
+  font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; color:var(--text-light);
+  font-weight:600; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;
+}
+.dn-pay-section-label::after { content:''; flex:1; height:1px; background:var(--mid-gray); }
+.dn-pay-methods { display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem; margin-bottom:1.5rem; }
+.dn-pay-method {
+  border:1.5px solid var(--mid-gray); border-radius:4px; padding:.8rem .5rem;
+  text-align:center; cursor:pointer; transition:all .2s; background:var(--off-white);
+}
+.dn-pay-method:hover { border-color:var(--crimson); background:var(--crimson-pale); }
+.dn-pay-method.active { border-color:var(--crimson); background:var(--crimson-pale); box-shadow:0 0 0 3px rgba(200,16,46,.1); }
+.dn-pay-method-icon { font-size:1.3rem; margin-bottom:.3rem; }
+.dn-pay-method-label { font-size:.63rem; font-weight:600; color:var(--text-dark); letter-spacing:.04em; }
+.dn-pay-field { margin-bottom:1.1rem; }
+.dn-pay-field label { display:block; font-size:.62rem; letter-spacing:.15em; text-transform:uppercase; color:var(--text-light); margin-bottom:.45rem; font-weight:600; }
+.dn-pay-field input {
+  width:100%; background:var(--off-white); border:1px solid var(--mid-gray); color:var(--text-dark);
+  padding:.75rem 1rem; font-family:'Outfit',sans-serif; font-size:.9rem; outline:none;
+  transition:border-color .3s,box-shadow .3s; border-radius:2px;
+}
+.dn-pay-field input:focus { border-color:var(--crimson); box-shadow:0 0 0 3px rgba(200,16,46,.08); }
+.dn-pay-field input::placeholder { color:var(--text-light); }
+.dn-pay-field-row { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
+.dn-upi-wrap { display:flex; gap:.6rem; }
+.dn-upi-wrap input { flex:1; }
+.dn-upi-verify {
+  background:var(--crimson); color:#fff; border:none; padding:.75rem 1.1rem;
+  font-family:'Outfit',sans-serif; font-size:.75rem; font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; border-radius:2px; white-space:nowrap; transition:background .2s;
+}
+.dn-upi-verify:hover { background:var(--crimson-dark); }
+.dn-pay-submit-btn {
+  width:100%; background:var(--crimson); color:#fff; border:none; padding:1.1rem;
+  font-family:'Outfit',sans-serif; font-size:.9rem; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; border-radius:2px; margin-top:1.5rem; transition:all .3s;
+  position:relative; overflow:hidden;
+}
+.dn-pay-submit-btn:hover { background:var(--crimson-dark); transform:translateY(-1px); box-shadow:0 10px 28px rgba(200,16,46,.3); }
+.dn-pay-submit-btn:disabled { opacity:.6; transform:none; cursor:not-allowed; }
+.dn-pay-footer-badges {
+  display:flex; justify-content:center; gap:1.5rem; margin-top:1rem; flex-wrap:wrap;
+}
+.dn-pay-badge { font-size:.62rem; color:var(--text-light); display:flex; align-items:center; gap:.3rem; }
+.dn-pay-success {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:3.5rem 2rem; text-align:center; min-height:360px;
+}
+.dn-pay-success-icon {
+  width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#28a745,#20c74b);
+  display:flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:1.5rem;
+  box-shadow:0 12px 32px rgba(40,167,69,.3); animation:pop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+.dn-pay-success-title { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; color:var(--text-dark); margin-bottom:.7rem; }
+.dn-pay-success-sub { font-size:.88rem; color:var(--text-mid); line-height:1.7; max-width:320px; }
+.dn-pay-success-ref { background:var(--crimson-pale); border:1px solid rgba(200,16,46,.15); border-radius:4px; padding:.7rem 1.2rem; margin:1.5rem 0; font-size:.78rem; color:var(--crimson); font-weight:600; letter-spacing:.08em; }
+.dn-pay-done-btn {
+  background:var(--crimson); color:#fff; border:none; padding:.9rem 2.5rem;
+  font-family:'Outfit',sans-serif; font-size:.82rem; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; border-radius:2px; transition:all .3s;
+}
+.dn-pay-done-btn:hover { background:var(--crimson-dark); }
+@media(max-width:540px){
+  .dn-pay-modal { max-height:100vh; border-radius:0; }
+  .dn-pay-methods { grid-template-columns:repeat(3,1fr); }
+  .dn-pay-field-row { grid-template-columns:1fr; }
+}
 `;
 
 /* ─── CONSTANTS ──────────────────────────────────────────────── */
@@ -769,6 +879,19 @@ export default function DentallApp() {
   /* ── cart ── */
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+
+  /* ── payment ── */
+  const [showPayment, setShowPayment] = useState(false);
+  const [payMethod, setPayMethod] = useState('card');
+  const [payProcessing, setPayProcessing] = useState(false);
+  const [paySuccess, setPaySuccess] = useState(false);
+  const [payForm, setPayForm] = useState({ cardName:'', cardNum:'', expiry:'', cvv:'', upi:'' });
+
+  const handlePayField = e => setPayForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  const formatCardNum = val => val.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
+  const formatExpiry = val => { const d=val.replace(/\D/g,'').slice(0,4); return d.length>2?d.slice(0,2)+'/'+d.slice(2):d; };
+  const handlePay = () => { setPayProcessing(true); setTimeout(()=>{ setPayProcessing(false); setPaySuccess(true); setCartItems([]); },2200); };
+  const closePayment = () => { setShowPayment(false); setPaySuccess(false); setPayProcessing(false); setPayForm({cardName:'',cardNum:'',expiry:'',cvv:'',upi:''}); };
 
   const addToCart = (item) => {
     setCartItems(prev => {
@@ -968,7 +1091,7 @@ export default function DentallApp() {
               <span className="dn-cart-subtotal-label">Subtotal</span>
               <span className="dn-cart-subtotal-val">₹{cartTotal.toLocaleString('en-IN')}</span>
             </div>
-            <button className="dn-cart-checkout-btn" onClick={()=>{setCartOpen(false);scrollTo('order');}}>Checkout →</button>
+            <button className="dn-cart-checkout-btn" onClick={()=>{setCartOpen(false);setShowPayment(true);}}>Checkout →</button>
           </div>
         )}
       </div>
@@ -1307,6 +1430,128 @@ export default function DentallApp() {
           <a href="#">Contact</a>
         </div>
       </footer>
+
+      {/* Payment Modal */}
+      {showPayment && (
+        <div className="dn-pay-overlay" onClick={e=>{if(e.target.className==='dn-pay-overlay')closePayment();}}>
+          <div className="dn-pay-modal">
+            <div className="dn-pay-header">
+              <div className="dn-pay-header-left">
+                <div className="dn-pay-secure-tag">Secure Checkout</div>
+                <div className="dn-pay-modal-title">Complete Your Order</div>
+              </div>
+              <button className="dn-pay-close" onClick={closePayment}>✕</button>
+            </div>
+
+            {paySuccess ? (
+              <div className="dn-pay-success">
+                <div className="dn-pay-success-icon">✓</div>
+                <div className="dn-pay-success-title">Payment Successful!</div>
+                <p className="dn-pay-success-sub">Thank you for your order. Your DENTALL brushes will be shipped within 24 hours.</p>
+                <div className="dn-pay-success-ref">Order Ref: DNT-{Math.random().toString(36).slice(2,8).toUpperCase()}</div>
+                <button className="dn-pay-done-btn" onClick={closePayment}>Continue Shopping</button>
+              </div>
+            ) : (
+              <div className="dn-pay-body">
+                {/* Order Summary */}
+                <div className="dn-pay-order-summary">
+                  <div className="dn-pay-summary-label">Order Summary</div>
+                  {cartItems.map(item=>(
+                    <div key={item.id} className="dn-pay-summary-row">
+                      <span>{item.icon} {item.name} × {item.qty}</span>
+                      <span>₹{(item.price*item.qty).toLocaleString('en-IN')}</span>
+                    </div>
+                  ))}
+                  <div className="dn-pay-summary-row"><span>Shipping</span><span style={{color:'#28a745',fontWeight:600}}>Free</span></div>
+                  <div className="dn-pay-summary-row total">
+                    <span>Total</span>
+                    <span>₹{cartTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                {/* Payment Method */}
+                <div className="dn-pay-section-label">Payment Method</div>
+                <div className="dn-pay-methods">
+                  {[{id:'card',icon:'💳',label:'Card'},{id:'upi',icon:'📱',label:'UPI'},{id:'netbanking',icon:'🏦',label:'Net Banking'}].map(m=>(
+                    <div key={m.id} className={`dn-pay-method ${payMethod===m.id?'active':''}`} onClick={()=>setPayMethod(m.id)}>
+                      <div className="dn-pay-method-icon">{m.icon}</div>
+                      <div className="dn-pay-method-label">{m.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Card Form */}
+                {payMethod==='card' && (
+                  <>
+                    <div className="dn-pay-section-label">Card Details</div>
+                    <div className="dn-pay-field">
+                      <label>Name on Card</label>
+                      <input name="cardName" value={payForm.cardName} onChange={handlePayField} placeholder="Arjun Sharma" />
+                    </div>
+                    <div className="dn-pay-field">
+                      <label>Card Number</label>
+                      <input name="cardNum" value={payForm.cardNum} onChange={e=>setPayForm(f=>({...f,cardNum:formatCardNum(e.target.value)}))} placeholder="1234 5678 9012 3456" maxLength={19} />
+                    </div>
+                    <div className="dn-pay-field-row">
+                      <div className="dn-pay-field">
+                        <label>Expiry</label>
+                        <input name="expiry" value={payForm.expiry} onChange={e=>setPayForm(f=>({...f,expiry:formatExpiry(e.target.value)}))} placeholder="MM/YY" maxLength={5} />
+                      </div>
+                      <div className="dn-pay-field">
+                        <label>CVV</label>
+                        <input name="cvv" value={payForm.cvv} onChange={e=>setPayForm(f=>({...f,cvv:e.target.value.replace(/\D/g,'').slice(0,3)}))} placeholder="•••" maxLength={3} type="password" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* UPI Form */}
+                {payMethod==='upi' && (
+                  <>
+                    <div className="dn-pay-section-label">UPI ID</div>
+                    <div className="dn-pay-field">
+                      <label>Enter UPI ID</label>
+                      <div className="dn-upi-wrap">
+                        <input name="upi" value={payForm.upi} onChange={handlePayField} placeholder="yourname@upi" />
+                        <button className="dn-upi-verify">Verify</button>
+                      </div>
+                    </div>
+                    <div style={{fontSize:'.75rem',color:'var(--text-light)',marginTop:'.5rem',lineHeight:1.6}}>
+                      Supported: GPay, PhonePe, Paytm, BHIM, Amazon Pay
+                    </div>
+                  </>
+                )}
+
+                {/* Net Banking */}
+                {payMethod==='netbanking' && (
+                  <>
+                    <div className="dn-pay-section-label">Select Bank</div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.6rem',marginBottom:'1rem'}}>
+                      {['SBI','HDFC','ICICI','Axis','Kotak','Other'].map(bank=>(
+                        <div key={bank} style={{border:'1.5px solid var(--mid-gray)',borderRadius:'4px',padding:'.7rem',textAlign:'center',cursor:'pointer',fontSize:'.8rem',fontWeight:600,color:'var(--text-mid)',background:'var(--off-white)',transition:'all .2s'}}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--crimson)';e.currentTarget.style.color='var(--crimson)';}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--mid-gray)';e.currentTarget.style.color='var(--text-mid)';}}>
+                          {bank}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                <button className="dn-pay-submit-btn" onClick={handlePay} disabled={payProcessing}>
+                  {payProcessing ? '⏳ Processing...' : `Pay ₹${cartTotal.toLocaleString('en-IN')} →`}
+                </button>
+
+                <div className="dn-pay-footer-badges">
+                  <span className="dn-pay-badge">🔒 256-bit SSL</span>
+                  <span className="dn-pay-badge">🛡️ PCI DSS Compliant</span>
+                  <span className="dn-pay-badge">↩ 30-Day Returns</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showVideo && (
         <div className="dn-video-modal" onClick={() => setShowVideo(false)}>
